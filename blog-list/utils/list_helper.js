@@ -42,9 +42,32 @@ const mostBlogs = (blogs) => {
   };
 };
 
+const mostLikes = (blogs) => {
+  if (blogs.length === 0) {
+    return {};
+  }
+
+  const groupedByAuthor = _.groupBy(blogs, "author");
+  const authorLikes = _.mapValues(groupedByAuthor, (authorBlogs) =>
+    _.sumBy(authorBlogs, "likes")
+  );
+
+  const authorWithMostLikes = _.maxBy(
+    _.toPairs(authorLikes),
+    ([author, likes]) => likes
+  );
+
+  // Return the result
+  return {
+    author: authorWithMostLikes[0],
+    likes: authorWithMostLikes[1],
+  };
+};
+
 module.exports = {
   dummy,
   totalLikes,
   favoriteBlog,
   mostBlogs,
+  mostLikes,
 };
