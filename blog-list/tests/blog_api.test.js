@@ -49,6 +49,41 @@ describe("api tests", () => {
     assert(contents.includes("Test Blog"));
   });
 
+  test("creating new post with no likes defaults to 0", async () => {
+    const newBlog = {
+      title: "Test Blog",
+      author: "Harry Potter",
+      url: "https://isvoldemortreal.com/",
+    };
+    await api
+      .post("/api/blogs")
+      .send(newBlog)
+      .expect(201)
+      .expect("Content-Type", /application\/json/);
+
+    const blogsAtEnd = await helper.blogsInDb();
+    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length + 1);
+
+    const contents = blogsAtEnd.find((b) => b.title === "Test Blog");
+    assert(contents.likes === 0);
+  });
+
+  test("attempting to create new post with no title gives error", async () => {
+    const newBlog = {
+      author: "Harry Potter",
+      url: "https://isvoldemortreal.com/",
+    };
+    await api.post("/api/blogs").send(newBlog).expect(400);
+  });
+
+  test("attempting to create new post with no url gives error", async () => {
+    const newBlog = {
+      title: "Test Blog",
+      author: "Harry Potter",
+    };
+    await api.post("/api/blogs").send(newBlog).expect(400);
+  });
+
   after(async () => {
     await mongoose.connection.close();
   });
