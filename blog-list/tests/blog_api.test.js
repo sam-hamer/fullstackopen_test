@@ -24,6 +24,31 @@ describe("api tests", () => {
       .expect("Content-Type", /application\/json/);
   });
 
+  test("_id field is renamed to id", async () => {
+    const response = await api.get("/api/blogs");
+    assert("id" in response.body[0]);
+  });
+
+  test("post creates new blog entry", async () => {
+    const newBlog = {
+      title: "Test Blog",
+      author: "Harry Potter",
+      url: "https://isvoldemortreal.com/",
+      likes: 7,
+    };
+    await api
+      .post("/api/blogs")
+      .send(newBlog)
+      .expect(201)
+      .expect("Content-Type", /application\/json/);
+
+    const blogsAtEnd = await helper.blogsInDb();
+    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length + 1);
+
+    const contents = blogsAtEnd.map((b) => b.title);
+    assert(contents.includes("Test Blog"));
+  });
+
   after(async () => {
     await mongoose.connection.close();
   });
