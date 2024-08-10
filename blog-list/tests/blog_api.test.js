@@ -84,6 +84,44 @@ describe("api tests", () => {
     await api.post("/api/blogs").send(newBlog).expect(400);
   });
 
+  describe("deletion of a post", () => {
+    test("succeeds with status code 204 if id is valid", async () => {
+      const blogsAtStart = await helper.blogsInDb();
+      const blogToDelete = blogsAtStart[0];
+
+      await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
+
+      const blogsAtEnd = await helper.blogsInDb();
+
+      assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length - 1);
+
+      const contents = blogsAtEnd.map((r) => r.title);
+      assert(!contents.includes(blogToDelete.title));
+    });
+  });
+
+  describe("update of a post", () => {
+    test("can update the likes of a post", async () => {
+      const blogsAtStart = await helper.blogsInDb();
+      const blogToUpdate = blogsAtStart[0];
+      const updatedLikes = {
+        likes: blogToUpdate.likes + 1,
+      };
+
+      await api
+        .put(`/api/blogs/${blogToUpdate.id}`)
+        .send(updatedLikes)
+        .expect(200);
+
+      const blogsAtEnd = await helper.blogsInDb();
+
+      assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length);
+
+      const contents = blogsAtEnd[0];
+      assert(contents.likes === blogToUpdate.likes + 1);
+    });
+  });
+
   after(async () => {
     await mongoose.connection.close();
   });
