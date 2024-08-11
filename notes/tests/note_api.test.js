@@ -65,6 +65,22 @@ describe("when there is initially some notes saved", () => {
   });
 
   describe("addition of a new note", () => {
+    let token;
+
+    beforeEach(async () => {
+      await User.deleteMany({});
+
+      const passwordHash = await bcrypt.hash("password", 10);
+      const user = new User({ username: "samwise", passwordHash });
+
+      await user.save();
+      const response = await api.post("/api/login").send({
+        username: "samwise",
+        password: "password",
+      });
+
+      token = response.body.token;
+    });
     test("succeeds with valid data", async () => {
       const newNote = {
         content: "async/await simplifies making async calls",
@@ -73,6 +89,7 @@ describe("when there is initially some notes saved", () => {
 
       await api
         .post("/api/notes")
+        .set("Authorization", `Bearer ${token}`)
         .send(newNote)
         .expect(201)
         .expect("Content-Type", /application\/json/);
@@ -89,7 +106,11 @@ describe("when there is initially some notes saved", () => {
         important: true,
       };
 
-      await api.post("/api/notes").send(newNote).expect(400);
+      await api
+        .post("/api/notes")
+        .set("Authorization", `Bearer ${token}`)
+        .send(newNote)
+        .expect(400);
 
       const notesAtEnd = await helper.notesInDb();
 
