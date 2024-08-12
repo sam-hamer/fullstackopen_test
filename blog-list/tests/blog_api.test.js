@@ -10,6 +10,8 @@ const api = supertest(app);
 
 const Blog = require("../models/blog");
 const User = require("../models/user");
+let token;
+let user;
 
 describe("api tests", () => {
   beforeEach(async () => {
@@ -18,6 +20,18 @@ describe("api tests", () => {
     const blogObjects = helper.initialBlogs.map((blog) => new Blog(blog));
     const promiseArray = blogObjects.map((blog) => blog.save());
     await Promise.all(promiseArray);
+
+    await User.deleteMany({});
+
+    const passwordHash = await bcrypt.hash("password", 10);
+    user = new User({ username: "samwise", passwordHash });
+    await user.save();
+    const response = await api.post("/api/login").send({
+      username: "samwise",
+      password: "password",
+    });
+
+    token = response.body.token;
   });
   test("blogs are returned as json", async () => {
     await api
@@ -40,6 +54,7 @@ describe("api tests", () => {
     };
     await api
       .post("/api/blogs")
+      .set("Authorization", `Bearer ${token}`)
       .send(newBlog)
       .expect(201)
       .expect("Content-Type", /application\/json/);
@@ -59,6 +74,7 @@ describe("api tests", () => {
     };
     await api
       .post("/api/blogs")
+      .set("Authorization", `Bearer ${token}`)
       .send(newBlog)
       .expect(201)
       .expect("Content-Type", /application\/json/);
@@ -75,7 +91,11 @@ describe("api tests", () => {
       author: "Harry Potter",
       url: "https://isvoldemortreal.com/",
     };
-    await api.post("/api/blogs").send(newBlog).expect(400);
+    await api
+      .post("/api/blogs")
+      .set("Authorization", `Bearer ${token}`)
+      .send(newBlog)
+      .expect(400);
   });
 
   test("attempting to create new post with no url gives error", async () => {
@@ -83,22 +103,79 @@ describe("api tests", () => {
       title: "Test Blog",
       author: "Harry Potter",
     };
-    await api.post("/api/blogs").send(newBlog).expect(400);
+    await api
+      .post("/api/blogs")
+      .set("Authorization", `Bearer ${token}`)
+      .send(newBlog)
+      .expect(400);
   });
 
   describe("deletion of a post", () => {
     test("succeeds with status code 204 if id is valid", async () => {
+      const newBlog = new Blog({
+        title: "testing middleware",
+        url: "www.bloggy.com",
+        likes: 5,
+        user: user._id,
+      });
+      const blogToDelete = await newBlog.save();
       const blogsAtStart = await helper.blogsInDb();
-      const blogToDelete = blogsAtStart[0];
 
-      await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
+      await api
+        .delete(`/api/blogs/${blogToDelete.id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(204);
 
       const blogsAtEnd = await helper.blogsInDb();
 
-      assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length - 1);
+      console.log(blogsAtStart, blogsAtEnd);
+      assert.strictEqual(blogsAtEnd.length, blogsAtStart.length - 1);
 
       const contents = blogsAtEnd.map((r) => r.title);
       assert(!contents.includes(blogToDelete.title));
+    });
+
+    test("fails with status code 401 if token is invalid", async () => {
+      const newBlog = new Blog({
+        title: "testing middleware",
+        url: "www.bloggy.com",
+        likes: 5,
+        user: user._id,
+      });
+      const blogToDelete = await newBlog.save();
+      const blogsAtStart = await helper.blogsInDb();
+
+      await api.delete(`/api/blogs/${blogToDelete.id}`).expect(401);
+
+      const blogsAtEnd = await helper.blogsInDb();
+
+      assert.strictEqual(blogsAtEnd.length, blogsAtStart.length);
+
+      const contents = blogsAtEnd.map((r) => r.title);
+      assert(contents.includes(blogToDelete.title));
+    });
+
+    test("fails with status code 401 if user is invalid", async () => {
+      const newBlog = new Blog({
+        title: "testing middleware",
+        url: "www.bloggy.com",
+        likes: 5,
+        user: user._id,
+      });
+      const blogToDelete = await newBlog.save();
+      const blogsAtStart = await helper.blogsInDb();
+
+      await api
+        .delete(`/api/blogs/${blogToDelete.id}`)
+        .set("Authorization", `Bearer sadfasdfasddf`)
+        .expect(401);
+
+      const blogsAtEnd = await helper.blogsInDb();
+
+      assert.strictEqual(blogsAtEnd.length, blogsAtStart.length);
+
+      const contents = blogsAtEnd.map((r) => r.title);
+      assert(contents.includes(blogToDelete.title));
     });
   });
 
