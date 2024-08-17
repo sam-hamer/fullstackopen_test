@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Blog from "./components/Blog";
 import Notification from "./components/Notification";
+import Togglable from "./components/Togglable";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
+import BlogForm from "./components/BlogForm";
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
@@ -18,6 +20,7 @@ const App = () => {
     message: null,
     type: null,
   });
+  const blogFormRef = useRef(null);
 
   useEffect(() => {
     blogService.getAll().then((blogs) => setBlogs(blogs));
@@ -32,23 +35,12 @@ const App = () => {
     }
   }, []);
 
-  const addBlog = (event) => {
-    event.preventDefault();
-    const blogObject = {
-      title: newBlog.title,
-      likes: newBlog.likes,
-      url: newBlog.url,
-    };
-
+  const addBlog = (blogObject) => {
+    blogFormRef.current.toggleVisibility();
     blogService
       .create(blogObject)
       .then((returnedBlog) => {
         setBlogs(blogs.concat(returnedBlog));
-        setNewBlog({
-          title: "",
-          likes: "",
-          url: "",
-        });
         setNotificationMessage({
           message: `Added blog ${blogObject.title}`,
           type: "success",
@@ -68,11 +60,14 @@ const App = () => {
       });
   };
 
-  const handleBlogChange = (event) => {
-    setNewBlog((previousBlog) => ({
-      ...previousBlog,
-      [event.target.name]: event.target.value,
-    }));
+  const handleLike = (id) => {
+    const blog = blogs.find((b) => b.id === id);
+    console.log(blog);
+    blogService
+      .update(blog.id, { likes: blog.likes + 1 })
+      .then((returnedBlog) => {
+        setBlogs(blogs.map((blog) => (blog.id !== id ? blog : returnedBlog)));
+      });
   };
 
   const handleLogin = async (event) => {
@@ -131,24 +126,19 @@ const App = () => {
   );
 
   const blogForm = () => (
-    <form onSubmit={addBlog}>
-      <span>title</span>
-      <input name="title" value={newBlog.title} onChange={handleBlogChange} />
-      <br />
-      <span>url</span>
-      <input name="url" value={newBlog.url} onChange={handleBlogChange} />
-      <br />
-      <span>likes</span>
-      <input name="likes" value={newBlog.likes} onChange={handleBlogChange} />
-      <br />
-      <button type="submit">create</button>
-    </form>
+    <Togglable buttonLabel="new blog" ref={blogFormRef}>
+      <BlogForm createBlog={addBlog} />
+    </Togglable>
   );
 
   const blogList = () => (
     <div>
       {blogs.map((blog) => (
-        <Blog key={blog.id} blog={blog} />
+        <Blog
+          key={blog.id}
+          blog={blog}
+          handleLike={() => handleLike(blog.id)}
+        />
       ))}
     </div>
   );
@@ -164,8 +154,10 @@ const App = () => {
         loginForm()
       ) : (
         <div>
-          <p>{user.name} logged-in</p>
+          <span>{user.name} logged-in</span>
           <button onClick={handleLogout}>logout</button>
+          <br />
+          <br />
           {blogForm()}
           {blogList()}
         </div>
