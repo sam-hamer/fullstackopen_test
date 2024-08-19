@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState } from 'react';
 
 const BlogForm = ({ createBlog }) => {
-  const [newBlog, setNewBlog] = useState("");
+  const [newBlog, setNewBlog] = useState('');
 
   const addBlog = (event) => {
     event.preventDefault();
@@ -14,9 +14,9 @@ const BlogForm = ({ createBlog }) => {
     createBlog(blogObject);
 
     setNewBlog({
-      title: "",
-      likes: "",
-      url: "",
+      title: '',
+      likes: '',
+      url: '',
     });
   };
 

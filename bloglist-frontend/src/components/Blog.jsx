@@ -1,6 +1,6 @@
-import Togglable from "./Togglable";
+import Togglable from './Togglable';
 
-const Blog = ({ blog, handleLike, handleRemove }) => {
+const Blog = ({ blog, handleLike, handleRemove, user }) => {
   return (
     <div className="blog">
       <span>{blog.title}</span>
@@ -12,7 +12,7 @@ const Blog = ({ blog, handleLike, handleRemove }) => {
         <br />
         {blog.user.name}
         <br />
-        <button onClick={handleRemove}>remove</button>
+        {blog.user.username === user.username && <button onClick={handleRemove}>remove</button>}
         <br />
       </Togglable>
     </div>

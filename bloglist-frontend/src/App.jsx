@@ -1,20 +1,15 @@
-import { useState, useEffect, useRef } from "react";
-import Blog from "./components/Blog";
-import Notification from "./components/Notification";
-import Togglable from "./components/Togglable";
-import blogService from "./services/blogs";
-import loginService from "./services/login";
-import BlogForm from "./components/BlogForm";
+import { useState, useEffect, useRef } from 'react';
+import Blog from './components/Blog';
+import Notification from './components/Notification';
+import Togglable from './components/Togglable';
+import blogService from './services/blogs';
+import loginService from './services/login';
+import BlogForm from './components/BlogForm';
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
-  const [newBlog, setNewBlog] = useState({
-    title: "",
-    likes: "",
-    url: "",
-  });
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [user, setUser] = useState(null);
   const [notificationMessage, setNotificationMessage] = useState({
     message: null,
@@ -23,13 +18,11 @@ const App = () => {
   const blogFormRef = useRef(null);
 
   useEffect(() => {
-    blogService
-      .getAll()
-      .then((blogs) => setBlogs(blogs.sort((a, b) => b.likes - a.likes)));
+    blogService.getAll().then((blogs) => setBlogs(blogs.sort((a, b) => b.likes - a.likes)));
   }, []);
 
   useEffect(() => {
-    const loggedUserJSON = window.localStorage.getItem("loggedBlogListUser");
+    const loggedUserJSON = window.localStorage.getItem('loggedBlogListUser');
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON);
       setUser(user);
@@ -45,7 +38,7 @@ const App = () => {
         setBlogs(blogs.concat(returnedBlog));
         setNotificationMessage({
           message: `Added blog ${blogObject.title}`,
-          type: "success",
+          type: 'success',
         });
         setTimeout(() => {
           setNotificationMessage({ message: null, type: null });
@@ -53,8 +46,8 @@ const App = () => {
       })
       .catch((error) => {
         setNotificationMessage({
-          message: `Failed to add blog`,
-          type: "error",
+          message: 'Failed to add blog',
+          type: 'error',
         });
         setTimeout(() => {
           setNotificationMessage({ message: null, type: null });
@@ -65,19 +58,18 @@ const App = () => {
   const handleLike = (id) => {
     const blog = blogs.find((b) => b.id === id);
     console.log(blog);
-    blogService
-      .update(blog.id, { likes: blog.likes + 1 })
-      .then((returnedBlog) => {
-        setBlogs(blogs.map((blog) => (blog.id !== id ? blog : returnedBlog)));
-      });
+    blogService.update(blog.id, { likes: blog.likes + 1 }).then((returnedBlog) => {
+      setBlogs(blogs.map((blog) => (blog.id !== id ? blog : returnedBlog)));
+    });
   };
 
   const handleRemove = (id) => {
-    const blog = blogs.find((b) => b.id === id);
-    console.log(blog);
-    blogService.remove(blog.id).then((returnedBlog) => {
-      setBlogs(blogs.map((blog) => blog.id !== id));
-    });
+    if (window.confirm('Are you sure you want to delete this blog?')) {
+      const blog = blogs.find((b) => b.id === id);
+      blogService.remove(blog.id).then(() => {
+        setBlogs(blogs.filter((blog) => blog.id !== id));
+      });
+    }
   };
 
   const handleLogin = async (event) => {
@@ -89,16 +81,16 @@ const App = () => {
         password,
       });
 
-      window.localStorage.setItem("loggedBlogListUser", JSON.stringify(user));
+      window.localStorage.setItem('loggedBlogListUser', JSON.stringify(user));
 
       blogService.setToken(user.token);
       setUser(user);
-      setUsername("");
-      setPassword("");
+      setUsername('');
+      setPassword('');
     } catch (exception) {
       setNotificationMessage({
-        message: `Incorrect username or password`,
-        type: "error",
+        message: 'Incorrect username or password',
+        type: 'error',
       });
       setTimeout(() => {
         setNotificationMessage({ message: null, type: null });
@@ -107,7 +99,7 @@ const App = () => {
   };
 
   const handleLogout = async () => {
-    window.localStorage.removeItem("loggedBlogListUser");
+    window.localStorage.removeItem('loggedBlogListUser');
     setUser(null);
   };
 
@@ -149,6 +141,7 @@ const App = () => {
           blog={blog}
           handleLike={() => handleLike(blog.id)}
           handleRemove={() => handleRemove(blog.id)}
+          user={user}
         />
       ))}
     </div>
@@ -157,10 +150,7 @@ const App = () => {
   return (
     <>
       <h2>blogs</h2>
-      <Notification
-        message={notificationMessage.message}
-        type={notificationMessage.type}
-      />
+      <Notification message={notificationMessage.message} type={notificationMessage.type} />
       {user === null ? (
         loginForm()
       ) : (
