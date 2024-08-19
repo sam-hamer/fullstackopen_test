@@ -23,7 +23,9 @@ const App = () => {
   const blogFormRef = useRef(null);
 
   useEffect(() => {
-    blogService.getAll().then((blogs) => setBlogs(blogs));
+    blogService
+      .getAll()
+      .then((blogs) => setBlogs(blogs.sort((a, b) => b.likes - a.likes)));
   }, []);
 
   useEffect(() => {
@@ -68,6 +70,14 @@ const App = () => {
       .then((returnedBlog) => {
         setBlogs(blogs.map((blog) => (blog.id !== id ? blog : returnedBlog)));
       });
+  };
+
+  const handleRemove = (id) => {
+    const blog = blogs.find((b) => b.id === id);
+    console.log(blog);
+    blogService.remove(blog.id).then((returnedBlog) => {
+      setBlogs(blogs.map((blog) => blog.id !== id));
+    });
   };
 
   const handleLogin = async (event) => {
@@ -138,6 +148,7 @@ const App = () => {
           key={blog.id}
           blog={blog}
           handleLike={() => handleLike(blog.id)}
+          handleRemove={() => handleRemove(blog.id)}
         />
       ))}
     </div>
