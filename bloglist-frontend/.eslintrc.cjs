@@ -5,6 +5,7 @@ module.exports = {
     'plugin:react/recommended',
     'plugin:prettier/recommended',
     'plugin:react/jsx-runtime',
+    'plugin:vitest-globals/recommended',
   ],
   plugins: ['react', 'prettier'],
   settings: { react: { version: '18.2' } },
@@ -26,5 +27,6 @@ module.exports = {
     browser: true,
     es2021: true,
     node: true,
+    'vitest-globals/env': true,
   },
 };
