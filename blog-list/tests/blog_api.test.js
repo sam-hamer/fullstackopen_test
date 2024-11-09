@@ -185,10 +185,12 @@ describe("api tests", () => {
       const blogToUpdate = blogsAtStart[0];
       const updatedLikes = {
         likes: blogToUpdate.likes + 1,
+        user: user._id,
       };
 
       await api
         .put(`/api/blogs/${blogToUpdate.id}`)
+        .set("Authorization", `Bearer ${token}`)
         .send(updatedLikes)
         .expect(200);
 
