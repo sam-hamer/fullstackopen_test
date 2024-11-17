@@ -35,7 +35,7 @@ const App = () => {
     blogService
       .create(blogObject)
       .then((returnedBlog) => {
-        setBlogs(blogs.concat(returnedBlog));
+        setBlogs([...blogs.concat(returnedBlog)].sort((a, b) => b.likes - a.likes));
         setNotificationMessage({
           message: `Added blog ${blogObject.title}`,
           type: 'success',
@@ -136,7 +136,7 @@ const App = () => {
   );
 
   const blogList = () => (
-    <div>
+    <div data-testid="blog-list">
       {blogs.map((blog) => (
         <Blog
           key={blog.id}
