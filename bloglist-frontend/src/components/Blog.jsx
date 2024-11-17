@@ -10,8 +10,8 @@ const Blog = ({ blog, handleLike, handleRemove, user }) => {
         <div className="url">{blog.url}</div>
         <div className="likes">{blog.likes}</div>
         <button onClick={handleLike}>like</button>
-        <div>{blog.user.name}</div>
-        {blog.user.username === user.username && <button onClick={handleRemove}>remove</button>}
+        <div>{blog.user?.name}</div>
+        {blog.user?.username === user?.username && <button onClick={handleRemove}>remove</button>}
       </Togglable>
     </div>
   );
