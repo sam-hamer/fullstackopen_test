@@ -1,3 +1,5 @@
+import { createSlice, current } from "@reduxjs/toolkit";
+
 const anecdotesAtStart = [
   "If it hurts, do it more often",
   "Adding manpower to a late software project makes it later!",
@@ -19,37 +21,60 @@ const asObject = (anecdote) => {
 
 const initialState = anecdotesAtStart.map(asObject);
 
-const reducer = (state = initialState, action) => {
-  switch (action.type) {
-    case "VOTE":
+const anecdoteSlice = createSlice({
+  name: "notes",
+  initialState,
+  reducers: {
+    createAnecdote(state, action) {
+      const content = action.payload;
+      state.push({
+        content,
+        votes: 0,
+        id: getId(),
+      });
+    },
+    voteAnecdote(state, action) {
       return state.map((anecdote) =>
-        anecdote.id === action.payload.id
+        anecdote.id === action.payload
           ? { ...anecdote, votes: anecdote.votes + 1 }
           : anecdote
       );
-    case "CREATE":
-      return [...state, action.payload];
-    default:
-      return state;
-  }
-};
-
-export const createAnecdote = (content) => {
-  return {
-    type: "CREATE",
-    payload: {
-      content,
-      id: getId(),
-      votes: 0,
     },
-  };
-};
+  },
+});
 
-export const voteAnecdote = (id) => {
-  return {
-    type: "VOTE",
-    payload: { id },
-  };
-};
+// const reducer = (state = initialState, action) => {
+//   switch (action.type) {
+//     case "VOTE":
+//       return state.map((anecdote) =>
+//         anecdote.id === action.payload.id
+//           ? { ...anecdote, votes: anecdote.votes + 1 }
+//           : anecdote
+//       );
+//     case "CREATE":
+//       return [...state, action.payload];
+//     default:
+//       return state;
+//   }
+// };
 
-export default reducer;
+// export const createAnecdote = (content) => {
+//   return {
+//     type: "CREATE",
+//     payload: {
+//       content,
+//       id: getId(),
+//       votes: 0,
+//     },
+//   };
+// };
+
+// export const voteAnecdote = (id) => {
+//   return {
+//     type: "VOTE",
+//     payload: { id },
+//   };
+// };
+
+export const { createAnecdote, voteAnecdote } = anecdoteSlice.actions;
+export default anecdoteSlice.reducer;
