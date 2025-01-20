@@ -5,16 +5,15 @@ import Togglable from './components/Togglable';
 import blogService from './services/blogs';
 import loginService from './services/login';
 import BlogForm from './components/BlogForm';
+import { useDispatch } from 'react-redux';
+import { setNotification } from './reducers/notificationReducer';
 
 const App = () => {
+  const dispatch = useDispatch();
   const [blogs, setBlogs] = useState([]);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [user, setUser] = useState(null);
-  const [notificationMessage, setNotificationMessage] = useState({
-    message: null,
-    type: null,
-  });
   const blogFormRef = useRef(null);
 
   useEffect(() => {
@@ -36,22 +35,10 @@ const App = () => {
       .create(blogObject)
       .then((returnedBlog) => {
         setBlogs([...blogs.concat(returnedBlog)].sort((a, b) => b.likes - a.likes));
-        setNotificationMessage({
-          message: `Added blog ${blogObject.title}`,
-          type: 'success',
-        });
-        setTimeout(() => {
-          setNotificationMessage({ message: null, type: null });
-        }, 3000);
+        dispatch(setNotification(`Added blog ${blogObject.title}`, 'success'));
       })
       .catch((error) => {
-        setNotificationMessage({
-          message: 'Failed to add blog',
-          type: 'error',
-        });
-        setTimeout(() => {
-          setNotificationMessage({ message: null, type: null });
-        }, 3000);
+        dispatch(setNotification('Failed to add blog', 'error'));
       });
   };
 
@@ -88,13 +75,7 @@ const App = () => {
       setUsername('');
       setPassword('');
     } catch (exception) {
-      setNotificationMessage({
-        message: 'Incorrect username or password',
-        type: 'error',
-      });
-      setTimeout(() => {
-        setNotificationMessage({ message: null, type: null });
-      }, 3000);
+      dispatch(setNotification('Incorrect username or password', 'error'));
     }
   };
 
@@ -152,7 +133,7 @@ const App = () => {
   return (
     <>
       <h2>blogs</h2>
-      <Notification message={notificationMessage.message} type={notificationMessage.type} />
+      <Notification />
       {user === null ? (
         loginForm()
       ) : (
