@@ -5,26 +5,28 @@ import Togglable from './components/Togglable';
 import blogService from './services/blogs';
 import loginService from './services/login';
 import BlogForm from './components/BlogForm';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setNotification } from './reducers/notificationReducer';
+import { initializeBlogs, createBlog, updateBlog, removeBlog } from './reducers/blogReducer';
+import { setUser, clearUser } from './reducers/userReducer';
 
 const App = () => {
   const dispatch = useDispatch();
-  const [blogs, setBlogs] = useState([]);
+  const blogs = useSelector((state) => state.blogs);
+  const user = useSelector((state) => state.user);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [user, setUser] = useState(null);
   const blogFormRef = useRef(null);
 
   useEffect(() => {
-    blogService.getAll().then((blogs) => setBlogs(blogs.sort((a, b) => b.likes - a.likes)));
+    blogService.getAll().then((blogs) => dispatch(initializeBlogs(blogs)));
   }, []);
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogListUser');
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON);
-      setUser(user);
+      dispatch(setUser(user));
       blogService.setToken(user.token);
     }
   }, []);
@@ -34,7 +36,7 @@ const App = () => {
     blogService
       .create(blogObject)
       .then((returnedBlog) => {
-        setBlogs([...blogs.concat(returnedBlog)].sort((a, b) => b.likes - a.likes));
+        dispatch(createBlog(returnedBlog));
         dispatch(setNotification(`Added blog ${blogObject.title}`, 'success'));
       })
       .catch((error) => {
@@ -44,9 +46,8 @@ const App = () => {
 
   const handleLike = (id) => {
     const blog = blogs.find((b) => b.id === id);
-    console.log(blog);
     blogService.update(blog.id, { likes: blog.likes + 1 }).then((returnedBlog) => {
-      setBlogs(blogs.map((blog) => (blog.id !== id ? blog : returnedBlog)));
+      dispatch(updateBlog(returnedBlog));
     });
   };
 
@@ -54,7 +55,7 @@ const App = () => {
     if (window.confirm('Are you sure you want to delete this blog?')) {
       const blog = blogs.find((b) => b.id === id);
       blogService.remove(blog.id).then(() => {
-        setBlogs(blogs.filter((blog) => blog.id !== id));
+        dispatch(removeBlog(id));
       });
     }
   };
@@ -71,7 +72,7 @@ const App = () => {
       window.localStorage.setItem('loggedBlogListUser', JSON.stringify(user));
 
       blogService.setToken(user.token);
-      setUser(user);
+      dispatch(setUser(user));
       setUsername('');
       setPassword('');
     } catch (exception) {
@@ -81,7 +82,8 @@ const App = () => {
 
   const handleLogout = async () => {
     window.localStorage.removeItem('loggedBlogListUser');
-    setUser(null);
+    dispatch(clearUser());
+    //blogService.setToken(null);
   };
 
   const loginForm = () => (
