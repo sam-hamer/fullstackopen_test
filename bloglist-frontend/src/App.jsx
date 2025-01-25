@@ -103,29 +103,52 @@ const App = () => {
   };
 
   const loginForm = () => (
-    <form onSubmit={handleLogin}>
-      <div>
-        username
-        <input
-          data-testid="username"
-          type="text"
-          value={username}
-          name="Username"
-          onChange={({ target }) => setUsername(target.value)}
-        />
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Sign in to your account
+          </h2>
+        </div>
+        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <input
+                data-testid="username"
+                type="text"
+                value={username}
+                name="Username"
+                onChange={({ target }) => setUsername(target.value)}
+                required
+                className="rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10"
+                placeholder="Username"
+              />
+            </div>
+            <div>
+              <input
+                data-testid="password"
+                type="password"
+                value={password}
+                name="Password"
+                onChange={({ target }) => setPassword(target.value)}
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10"
+                placeholder="Password"
+              />
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            >
+              Sign in
+            </button>
+          </div>
+        </form>
       </div>
-      <div>
-        password
-        <input
-          data-testid="password"
-          type="password"
-          value={password}
-          name="Password"
-          onChange={({ target }) => setPassword(target.value)}
-        />
-      </div>
-      <button type="submit">login</button>
-    </form>
+    </div>
   );
 
   const blogForm = () => (
@@ -135,27 +158,47 @@ const App = () => {
   );
 
   const blogList = () => (
-    <div data-testid="blog-list">
-      <h3>blogs</h3>
-      {blogs.map((blog) => (
-        <div key={blog.id} className="blog">
-          <Link to={`/blogs/${blog.id}`}>
-            <div>{blog.title}</div>
-          </Link>{' '}
-        </div>
-      ))}
+    <div data-testid="blog-list" className="space-y-6">
+      <h2 className="text-3xl font-bold text-gray-900">Blogs</h2>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {blogs.map((blog) => (
+          <Link key={blog.id} to={`/blogs/${blog.id}`} className="block">
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <h3 className="text-lg font-medium text-gray-900 truncate">{blog.title}</h3>
+                <p className="mt-1 text-sm text-gray-500 truncate">{blog.url}</p>
+                <div className="mt-4 flex items-center text-sm text-gray-500">
+                  {blog.likes} likes
+                </div>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 
   const usersList = () => (
-    <div data-testid="users-list">
-      <h3>users</h3>
-      <div className="usersList">
-        <div className="usersHeader">Users</div>
-        <div className="usersHeader">Blogs Created</div>
-        {users.map((user) => (
-          <User key={user.id} user={user} />
-        ))}
+    <div data-testid="users-list" className="space-y-6">
+      <h2 className="text-3xl font-bold text-gray-900">Users</h2>
+      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                User
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Blogs Created
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {users.map((user) => (
+              <User key={user.id} user={user} />
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -166,33 +209,35 @@ const App = () => {
   const foundBlog = blogMatch ? blogs.find((blog) => blog.id === blogMatch.params.id) : null;
 
   return (
-    <>
-      <Menu handleLogout={handleLogout} />
-      <h2>Blog App</h2>
-      <Notification />
-      {user === null ? (
-        loginForm()
-      ) : (
-        <div>
-          <Routes>
-            <Route path="users/:id" element={<UserDetails user={foundUser} />} />
-            <Route
-              path="blogs/:id"
-              element={
-                <BlogDetails
-                  blog={foundBlog}
-                  handleLike={() => handleLike(foundBlog.id)}
-                  handleRemove={() => handleRemove(foundBlog.id)}
-                  user={user}
-                />
-              }
-            />
-            <Route path="/users" element={usersList()} />
-            <Route path="/" element={blogList()} />
-          </Routes>
-        </div>
-      )}
-    </>
+    <div className="min-h-screen bg-gray-50">
+      {user && <Menu handleLogout={handleLogout} />}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <Notification />
+        {user === null ? (
+          loginForm()
+        ) : (
+          <div className="space-y-6">
+            {blogForm()}
+            <Routes>
+              <Route path="users/:id" element={<UserDetails user={foundUser} />} />
+              <Route
+                path="blogs/:id"
+                element={
+                  <BlogDetails
+                    blog={foundBlog}
+                    handleLike={() => handleLike(foundBlog.id)}
+                    handleRemove={() => handleRemove(foundBlog.id)}
+                    user={user}
+                  />
+                }
+              />
+              <Route path="/users" element={usersList()} />
+              <Route path="/" element={blogList()} />
+            </Routes>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 

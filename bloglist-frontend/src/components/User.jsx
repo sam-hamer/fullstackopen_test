@@ -9,12 +9,14 @@ import {
 
 const User = ({ user }) => {
   return (
-    <>
-      <Link to={`/users/${user.id}`} className="usersListItem">
-        <div>{user.name}</div>
-      </Link>
-      <div>{user.blogs.length}</div>
-    </>
+    <tr>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <Link to={`/users/${user.id}`} className="text-blue-600 hover:text-blue-900">
+          {user.name}
+        </Link>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.blogs.length}</td>
+    </tr>
   );
 };
 
