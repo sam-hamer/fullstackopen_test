@@ -29,3 +29,23 @@ h1 {
   padding: 10px;
   margin-bottom: 10px;
 }
+
+.usersList {
+  display: grid;
+  grid-template-columns: 200px 200px;
+  row-gap: 10px;
+}
+
+.usersHeader {
+  font-weight: 800;
+}
+
+.usersListItem {
+  display: contents;
+}
+
+.menuBar {
+  background-color: #e0e0e0;
+  padding: 10px;
+  margin-bottom: 10px;
+}

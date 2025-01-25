@@ -1,18 +1,34 @@
 import { useState, useEffect, useRef } from 'react';
 import Blog from './components/Blog';
+import User from './components/User';
 import Notification from './components/Notification';
 import Togglable from './components/Togglable';
 import blogService from './services/blogs';
 import loginService from './services/login';
+import userService from './services/users';
 import BlogForm from './components/BlogForm';
+import Menu from './components/Menu';
 import { useDispatch, useSelector } from 'react-redux';
 import { setNotification } from './reducers/notificationReducer';
 import { initializeBlogs, createBlog, updateBlog, removeBlog } from './reducers/blogReducer';
 import { setUser, clearUser } from './reducers/userReducer';
+import { initializeUsers, clearUsers } from './reducers/usersReducer';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Link,
+  useMatch,
+  useNavigate,
+} from 'react-router-dom';
+import './index.css';
+import UserDetails from './components/UserDetails';
+import BlogDetails from './components/BlogDetails';
 
 const App = () => {
   const dispatch = useDispatch();
   const blogs = useSelector((state) => state.blogs);
+  const users = useSelector((state) => state.users);
   const user = useSelector((state) => state.user);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -20,6 +36,7 @@ const App = () => {
 
   useEffect(() => {
     blogService.getAll().then((blogs) => dispatch(initializeBlogs(blogs)));
+    userService.getAll().then((users) => dispatch(initializeUsers(users)));
   }, []);
 
   useEffect(() => {
@@ -83,7 +100,6 @@ const App = () => {
   const handleLogout = async () => {
     window.localStorage.removeItem('loggedBlogListUser');
     dispatch(clearUser());
-    //blogService.setToken(null);
   };
 
   const loginForm = () => (
@@ -120,32 +136,60 @@ const App = () => {
 
   const blogList = () => (
     <div data-testid="blog-list">
+      <h3>blogs</h3>
       {blogs.map((blog) => (
-        <Blog
-          key={blog.id}
-          blog={blog}
-          handleLike={() => handleLike(blog.id)}
-          handleRemove={() => handleRemove(blog.id)}
-          user={user}
-        />
+        <div key={blog.id} className="blog">
+          <Link to={`/blogs/${blog.id}`}>
+            <div>{blog.title}</div>
+          </Link>{' '}
+        </div>
       ))}
     </div>
   );
 
+  const usersList = () => (
+    <div data-testid="users-list">
+      <h3>users</h3>
+      <div className="usersList">
+        <div className="usersHeader">Users</div>
+        <div className="usersHeader">Blogs Created</div>
+        {users.map((user) => (
+          <User key={user.id} user={user} />
+        ))}
+      </div>
+    </div>
+  );
+
+  const userMatch = useMatch('users/:id');
+  const foundUser = userMatch ? users.find((user) => user.id === userMatch.params.id) : null;
+  const blogMatch = useMatch('blogs/:id');
+  const foundBlog = blogMatch ? blogs.find((blog) => blog.id === blogMatch.params.id) : null;
+
   return (
     <>
-      <h2>blogs</h2>
+      <Menu handleLogout={handleLogout} />
+      <h2>Blog App</h2>
       <Notification />
       {user === null ? (
         loginForm()
       ) : (
         <div>
-          <span>{user.name} logged-in</span>
-          <button onClick={handleLogout}>logout</button>
-          <br />
-          <br />
-          {blogForm()}
-          {blogList()}
+          <Routes>
+            <Route path="users/:id" element={<UserDetails user={foundUser} />} />
+            <Route
+              path="blogs/:id"
+              element={
+                <BlogDetails
+                  blog={foundBlog}
+                  handleLike={() => handleLike(foundBlog.id)}
+                  handleRemove={() => handleRemove(foundBlog.id)}
+                  user={user}
+                />
+              }
+            />
+            <Route path="/users" element={usersList()} />
+            <Route path="/" element={blogList()} />
+          </Routes>
         </div>
       )}
     </>
